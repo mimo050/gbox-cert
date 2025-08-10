@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>تم الدفع بنجاح</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:system-ui,-apple-system;max-width:720px;margin:24px auto;padding:24px;background:#f7f7f7}
+    .card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    h1{color:#22c55e;margin:0 0 10px}
+    p{margin:6px 0;color:#333}
+    code{display:block;background:#fafafa;border:1px solid #eee;border-radius:8px;padding:10px;direction:ltr}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    a.btn,button.btn{appearance:none;border:0;border-radius:10px;padding:12px 16px;text-decoration:none;display:inline-block;cursor:pointer}
+    .primary{background:#2563eb;color:#fff}
+    .muted{background:#eee;color:#111}
+    .ok{color:#16a34a}
+    .warn{color:#b45309}
+    small{color:#666}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>✅ تم الدفع بنجاح</h1>
+    <p>شكرًا لك! استلمنا بياناتك، ونسوّي الشهادة لك الآن.</p>
+
+    <p><b>البريد:</b> <span id="email">—</span></p>
+    <p><b>UDID:</b></p>
+    <code id="udid">—</code>
+
+    <p id="status" class="warn">نحاول إرسال بياناتك للسيرفر…</p>
+
+    <div class="row">
+      <!-- زر تحميل فوري كحل احتياطي -->
+      <a id="downloadCert" class="btn primary" href="UDID.mobileconfig" download>📥 تحميل شهادة UDID (بديل مؤقت)</a>
+      <!-- زر واتساب يرسل نفس البيانات لك -->
+      <a id="whatsapp" class="btn muted" target="_blank">💬 إرسال البيانات عبر واتساب</a>
+    </div>
+
+    <p><small>لو ما تم الإرسال تلقائيًا، تقدر تحمل الشهادة الآن وترسل لنا البيانات عبر واتساب، وبنصدرها لك يدويًا.</small></p>
+  </div>
+
+  <script>
+    // ضع رابط السيرفر لما تفعّله على Render (مثال: https://gbox-cert-site.onrender.com)
+    const BACKEND_URL = ""; // ← إذا فضي، بنستخدم البدائل (تحميل + واتساب)
+
+    const qs = new URLSearchParams(location.search);
+    const email = qs.get('email') || '';
+    const udid  = qs.get('udid')  || '';
+
+    // أعرض القيم
+    document.getElementById('email').textContent = email || 'غير متوفر';
+    document.getElementById('udid').textContent  = udid  || 'غير متوفر';
+
+    // جهّز زر واتساب برسالة جاهزة
+    (function(){
+      const msg = `مرحبًا، هذه بيانات طلبي:\nEmail: ${email || '-'}\nUDID: ${udid || '-'}`;
+      const phone = '9665XXXXXXXX'; // ← ضع رقمك بصيغة دولية
+      const wa = document.getElementById('whatsapp');
+      wa.href = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    })();
+
+    // محاولة الإرسال للسيرفر (أفضل تجربة)
+    async function sendToBackend(){
+      const st = document.getElementById('status');
+      if(!BACKEND_URL){
+        st.textContent = 'ما عندنا سيرفر الآن — استخدم الأزرار أعلاه مؤقتًا.';
+        st.className = 'warn';
+        return;
+      }
+      try {
+        st.textContent = 'يتم إرسال الطلب للسيرفر…';
+        // نقطة استلام بسيطة تقترح: /api/queue  (بنفعّلها لك في السيرفر)
+        const res = await fetch(BACKEND_URL + '/api/queue', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ email, udid })
+        });
+        if(!res.ok) throw new Error('bad status ' + res.status);
+        const data = await res.json().catch(()=>({}));
+        st.textContent = 'تم استلام طلبك بنجاح. بنرسل الشهادة على بريدك قريبًا ✉️';
+        st.className = 'ok';
+        // لو رجع orderId نقدر نعمل تتبّع:
+        if(data.orderId){
+          // مثال: عرض رابط تتبّع (في حال فعّلناه في الباكند)
+          const a = document.createElement('a');
+          a.href = BACKEND_URL + '/orders/' + data.orderId;
+          a.target = '_blank';
+          a.textContent = 'عرض حالة الطلب';
+          a.className = 'btn muted';
+          document.querySelector('.row').appendChild(a);
+        }
+      } catch(e){
+        st.textContent = 'تعذّر الاتصال بالسيرفر — استخدم تحميل الشهادة أو واتساب.';
+        st.className = 'warn';
+      }
+    }
+    sendToBackend();
+  </script>
+</body>
+</html>
