@@ -1,0 +1,43 @@
+<!doctype html><html lang="ar" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>gbox-cert</title>
+<style>
+body{font-family:system-ui,-apple-system;max-width:720px;margin:24px auto;padding:0 16px}
+h1{font-size:22px;margin:0 0 12px}label{display:block;margin:12px 0 6px}
+input,button{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:16px}
+button{background:#2563eb;color:#fff;border:none;cursor:pointer}small{color:#777}
+.opt{margin:10px 0}
+</style>
+</head><body>
+<h1>شراء شهادة توقيع iOS</h1>
+<form id="f">
+  <label>البريد الإلكتروني</label>
+  <input name="email" type="email" required placeholder="you@example.com">
+  <label>UDID</label>
+  <input name="udid" type="text" required placeholder="00008101-XXXXXXXXXXXX">
+  <div class="opt">
+    <label><input type="radio" name="method" value="card" checked> بطاقة (فيزا/ماستر)</label><br>
+    <label><input type="radio" name="method" value="applepay"> Apple Pay</label>
+  </div>
+  <button>ادفع الآن</button>
+</form>
+
+<script>
+// ما عندنا سيرفر الآن، نحول إلى Payment Link المختصر
+const PAY_LINK_CARD  = "https://paymob.xyz/Rp2ziMfF/";
+const PAY_LINK_APPLE = "https://paymob.xyz/Rp2ziMfF/"; // مؤقتًا نفس الرابط
+
+document.getElementById('f').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const email = (fd.get('email')||'').trim();
+  const udid  = (fd.get('udid')||'').trim();
+  const method= fd.get('method');
+  const link  = method==='applepay' ? PAY_LINK_APPLE : PAY_LINK_CARD;
+  const url   = new URL(link);
+  url.searchParams.set('email', email);
+  url.searchParams.set('udid',  udid);
+  location.href = url.toString();
+});
+</script>
+</body></html>
