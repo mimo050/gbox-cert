@@ -40,4 +40,25 @@ document.getElementById('f').addEventListener('submit', (e)=>{
   location.href = url.toString();
 });
 </script>
-</body></html>
+<!-- أضف هذا قبل </body> مباشرة -->
+<p style="margin-top:16px;font-size:14px;line-height:1.7">
+بعد الدفع وإنهاء العملية في Paymob، اضغط هنا لإكمال الطلب:
+<a id="doneLink" href="#" style="font-weight:bold;text-decoration:underline">إكمال الطلب</a>
+</p>
+
+<script>
+  // نحدّث رابط "إكمال الطلب" بنفس الإيميل والـ UDID المختارين
+  const doneA = document.getElementById('doneLink');
+  const f = document.getElementById('f');
+  function updateDoneLink(){
+    const fd = new FormData(f);
+    const email = (fd.get('email')||'').trim();
+    const udid  = (fd.get('udid')||'').trim();
+    const url = new URL('./thankyou.html', location.href);
+    url.searchParams.set('email', email);
+    url.searchParams.set('udid',  udid);
+    doneA.href = url.toString();
+  }
+  f.addEventListener('input', updateDoneLink);
+  updateDoneLink();
+</script></body></html>
